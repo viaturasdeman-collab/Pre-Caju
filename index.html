@@ -432,4 +432,69 @@ function abrirModalEditar(index) {
     <label>Tipo <input type="text" id="fTipo" autocomplete="off" value="${v.tipo}" list="listaTipos"></label>
     <datalist id="listaTipos"><option value="AS"><option value="ABS"><option value="ABT"><option value="UR"><option value="APC"><option value="AEM"><option value="FIAT"></datalist>
     <label>Cargo <select id="fCargo">
-      <option value="" ${!v.cargo ?
+      <option value="" ${!v.cargo ? 'selected' : ''}>— Nenhum —</option>
+      <option value="Coordenador" ${v.cargo === 'Coordenador' ? 'selected' : ''}>Coordenador</option>
+      <option value="Supervisor" ${v.cargo === 'Supervisor' ? 'selected' : ''}>Supervisor</option>
+    </select></label>
+    <label>Responsável <input type="text" id="fResponsavel" autocomplete="off" value="${v.responsavel || ''}" placeholder="Ex: MAJ QOBM Luiz Mario"></label>
+    <label>Propriedade <input type="text" id="fPropriedade" autocomplete="off" value="${v.propriedade || ''}" placeholder="Ex: Própria, Locada, Cedida pelo TRE" list="listaPropriedade" onchange="toggleEmpresa()"></label>
+    <datalist id="listaPropriedade">
+      <option value="Própria"><option value="Locada"><option value="Cedida pelo TRE">
+    </datalist>
+    <label id="labelEmpresa" style="${v.propriedade === 'Locada' ? 'display:flex;' : 'display:none;'}">Empresa (Locada) <input type="text" id="fEmpresa" autocomplete="off" value="${v.empresa || ''}" placeholder="Nome da empresa"></label>
+    <label>Cartão de Abastecimento <input type="text" id="fCartao" autocomplete="off" value="${v.cartao || ''}" placeholder="Opcional"></label>
+    <label>Status <select id="fStatus">
+      <option value="Operante" ${v.status === 'Operante' ? 'selected' : ''}>Operante</option>
+      <option value="Baixada" ${v.status === 'Baixada' ? 'selected' : ''}>Baixada</option>
+    </select></label>
+    <label>Condutor <input type="text" id="fCondutor" autocomplete="off" value="${v.condutor || ''}"></label>
+    <label>Contato <input type="text" id="fContato" autocomplete="off" value="${v.contato || ''}" placeholder="Ex: (79) 99999-9999"></label>
+    <label>Observações <input type="text" id="fObs" autocomplete="off" value="${v.obs || ''}"></label>
+  `;
+  setTimeout(toggleEmpresa, 10);
+  modal.style.display = 'flex';
+}
+
+document.getElementById('modalCancel').onclick = () => modal.style.display = 'none';
+document.getElementById('modalConfirm').onclick = () => {
+  const dados = {
+    prefixo: document.getElementById('fPrefixo').value.trim(),
+    placa: document.getElementById('fPlaca').value.trim(),
+    tipo: document.getElementById('fTipo').value.trim(),
+    cargo: document.getElementById('fCargo').value,
+    responsavel: document.getElementById('fResponsavel').value.trim(),
+    propriedade: document.getElementById('fPropriedade').value.trim(),
+    empresa: document.getElementById('fEmpresa').value.trim(),
+    cartao: document.getElementById('fCartao').value.trim(),
+    status: document.getElementById('fStatus').value,
+    condutor: document.getElementById('fCondutor').value.trim(),
+    contato: document.getElementById('fContato').value.trim(),
+    obs: document.getElementById('fObs').value.trim()
+  };
+  if (!dados.prefixo) return alert('O prefixo é obrigatório!');
+  
+  const isNew = editandoPrefixoOriginal === null;
+  enviarParaPlanilha('save', { viatura: dados, isNew: isNew, oldPrefixo: editandoPrefixoOriginal });
+  modal.style.display = 'none';
+};
+
+function alternarStatus(prefixo) {
+  const v = viaturas.find(x => x.prefixo === prefixo);
+  const novoStatus = v.status === 'Operante' ? 'Baixada' : 'Operante';
+  enviarParaPlanilha('toggleStatus', { prefixo: prefixo, status: novoStatus });
+}
+
+document.getElementById('addBtn').onclick = abrirModalNovo;
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+carregarDados().then(() => { iniciarAutoRefresh(); });
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { pararAutoRefresh(); }
+  else { carregarDados().then(() => { iniciarAutoRefresh(); }); }
+});
+</script>
+</body>
+</html>
